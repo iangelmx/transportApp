@@ -149,6 +149,22 @@ class API_tmx
 		$db->close();
 	}
 	function doQuery($consulta, $utf8=false){
+        /*
+        Ejecuta una consulta SQL
+            $consulta : str (Es la consulta SQL) " SELECT id, chofer FROM unidad WHERE placa = 'ABC'; "
+        Regresa un arreglo con los resultados como:
+        array( 
+            [0] => array(
+                "id"        => 1,
+                "chofer"    => "Angel"
+            )
+        )
+        Y se recupera el contenido como: 
+        $resultado = bd->doQuery( consulta );
+
+        $resultado[0]['id']     <- Ahí estará el id
+        $resultado[0]['chofer'] <- Ahí estará el chofer
+        */
 		$db = $this->conectaBD();
 		if($utf8 == true ){
     		$db->set_charset("utf8");
