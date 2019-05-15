@@ -12,9 +12,9 @@ class API_tmx
     */
 	protected function conectaBD(){
 		$db_host= "localhost";
-		$db_user= "transportApp";
-		$db_password= "root";
-		$db_name= "";
+		$db_user= "root";
+		$db_password= "";
+		$db_name= "transportApp";
 		$db = mysqli_connect($db_host,$db_user,$db_password,$db_name);
 		return $db;
 	}
