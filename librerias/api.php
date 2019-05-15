@@ -1,6 +1,15 @@
 <?php
 class API_tmx
 {
+    /*
+    Funciones importantes:
+        * doQuery
+        * existsInDB
+        * updateInDB
+        * llamada
+        * getCamposGenericos
+        * doTransaction
+    */
 	protected function conectaBD(){
 		$db_host= "localhost";
 		$db_user= "transportApp";
@@ -10,7 +19,10 @@ class API_tmx
 		return $db;
 	}
 	function llamada($peticion, $url, $headers = false, $disableSSLWarnings=false, $traceback=false, $jsonReq=false){ //http://psdtelmex.com.mx
-	  $ch = curl_init($url);
+      /*
+        Hace una petición POST a alguna dirección de internet
+      */ 
+        $ch = curl_init($url);
 	  //print_r( http_build_query($peticionProject) );
 	  switch ($headers) {
 	  	case false:
@@ -94,35 +106,7 @@ class API_tmx
         }
         return "Hubo un error";        
 	}
-	function getProyectoDepCrit($idDependencia,  $entity_idDep = 30){
-		$db = $this->conectaBD();
-		//SELECT parent_item_id FROM `app_entity_30` where id='1'
-		$query="SELECT parent_item_id FROM `app_entity_$entity_idDep` WHERE id='$idDependencia';";
-        $resultado=mysqli_query($db,$query);
-        $nRows = mysqli_num_rows($resultado);
-        if($nRows>0){
-            $n = mysqli_fetch_array($resultado,MYSQLI_ASSOC);
-            $proyecto=$n['parent_item_id'];
-        }
-        mysqli_close($db);
-        return $proyecto;
-	}
-	function getCampoGenerico($nombreCampo, $numEntidadPDS, $condiciones){
-		$db = $this->conectaBD();
-		
-		$query="SELECT $nombreCampo FROM `app_entity_$numEntidadPDS` WHERE $condiciones;";
-		print_r($query."\n");
-		$query = utf8_decode($query);
-        $resultado=mysqli_query($db,$query);
-        $nRows = mysqli_num_rows($resultado);
-        if($nRows>0){
-            $n = mysqli_fetch_array($resultado,MYSQLI_ASSOC);
-            $result=$n[$nombreCampo];
-        }
-        $result = json_decode($result,true);
-        mysqli_close($db);
-        return $result;
-	}
+
 	function getCamposGenericos($listaCampos, $numEntidadPDS, $condiciones){
 		$db = $this->conectaBD();
 		$resultados = array();
@@ -132,7 +116,7 @@ class API_tmx
 		}
 		$cadena = substr($string, 0, -2);
 		foreach ($listaCampos as $campo) {
-			$query="SELECT $cadena FROM `app_entity_$numEntidadPDS` WHERE $condiciones;";
+			$query="SELECT $cadena FROM `$numEntidadPDS` WHERE $condiciones;";
 			$query = utf8_decode($query);
 	        $resultado=mysqli_query($db,$query);
 	        $nRows = mysqli_num_rows($resultado);
@@ -217,6 +201,14 @@ class API_tmx
 		return $arregloResultado;
 	}
 	function insertInDB($table, $columnas, $valores, $traceback=false, $decodeUtf8=true){
+        /*
+        Hace una inserción a la base de datos:
+            $table : str (Es la tabla a donde se va a insertar)
+            $columnas : str (Son las columnas a insertar): "a,b,c"
+            $valores: str (Son los valores a insertar) "'4', 'Angel', '2'"
+        Regresa true si todo salió bien.
+        Sino, regresa el error
+        */
 		$db = $this->conectaBD();
 		//$valores = $db->real_escape_string($valores);
 		$query = "INSERT into $table($columnas) VALUES($valores);";
@@ -287,6 +279,13 @@ class API_tmx
 		$db->close();
 	}
 	function existsInDB($table, $condicionesExist){
+        /*
+            Coteja que un valor exista en una tabla de la BD
+                $table : str (Es la tabla a donde se va a consultar)
+                $condicionesExist : str (Son las condiciones como: " id = 'AX3J';" )
+            Regresa 0 si NO existe,
+            Regresa 1 o 2, o 3 ... si existe 1 o 2 o 3, ... en la tabla de la BD
+        */
 		$query = "SELECT count(*) as cuenta FROM `$table` WHERE $condicionesExist;";
 		echo "Consulta Exists: ".$query."\n";
 		$query = utf8_decode($query);
@@ -308,6 +307,14 @@ class API_tmx
 		$db->close();
 	}
 	function updateInDB($table, $setData, $whereParams, $traceback=false){
+        /*
+        Actualiza un registro de la BD
+            $table : str (Es la tabla a donde se va a actualizar)
+            $columnas : str (Son los valores y columnas a actualizar): " status = 'inactivo', ganancias = '300' "
+            $whereParams: str (Son las condiciones en donde se actualizará) " id = '3'"
+        Regresa true si todo salió bien.
+        Sino, regresa el error
+        */
 		$query = "UPDATE $table SET $setData WHERE $whereParams";
 		if($traceback == true){
 			echo "UPDATE statement: ".$query."\n";
@@ -324,61 +331,12 @@ class API_tmx
 		    //If the query was NOT successful
 		    echo "Error updateInDB()";
 		    echo "Ha ocurrido un error. Error No.: ";
-		    echo $db->errno;
+            echo $db->errno;
+            echo " Info del error: ".$db->error;
 		}
 		$db->close();	
 	}
-	function getTelegramIdUser($idUser){
-		$db = $this->conectaBD();
-		$query = "
-		SELECT 
-			field_824 as idTelegram
-		FROM app_entity_1
-		WHERE id = '$idUser';";
-		if ($db->real_query($query)) {
-		    //If the query was successful
-		    $res = $db->use_result();
-		    $row = $res->fetch_assoc();
-		    $db->close();
-		    return $row['idTelegram'];
-		}
-	    else{
-		    //If the query was NOT successful
-		    echo "Error getTelegramIdUser()";
-		    echo "Ha ocurrido un error. Error No.: ";
-		    echo $db->errno;
-		}
-		$db->close();	
-	}
-	public function get_configuration($modules_configuration,$modules_id)
-	{				
-		$configuration = array();
-	
-		$values_schema = array();
-		$db = $this->conectaBD();
-		$query = "SELECT * from app_ext_modules_cfg where modules_id='" . $modules_id . "'";
-		if ($db->real_query($query)) {
-        	//If the query was successful
-		    $res = $db->use_result();
-        	while($row = $res->fetch_assoc()){
-        		$values_schema[$row['cfg_key']] = $row['cfg_value'];
-        		
-        	}
-        	foreach($modules_configuration as $cfg)
-			{
-				$value = (isset($values_schema[$cfg['key']]) ? $values_schema[$cfg['key']] : '');
-					
-				$configuration[$cfg['key']] = $value;
-			}
-			return $configuration;
-		}
-	    else{
-		    //If the query was NOT successful
-		    echo "Error get_configuration()\n<br>";
-		    echo "Ha ocurrido un error. Error No.: ";
-		    echo $db->errno;
-		}
-	}
+
 	function doPost($url=null, $params=array(), $flag = false){
 		if ($url != null and (! empty($params))){
 			$data = $params;
@@ -449,6 +407,12 @@ class API_tmx
 		return $card;
 	}
 	function doTransaction($transaccion, $utf8=true){
+        /*
+        Ejecuta una serie de consultas SQL (insert o select o delete) en la base de datos
+            $transaccion: array (Son las consultas SQL a ejecutar)
+        Si algo salió mal, regresa el error
+        No regresa nada si todo salió bien.
+        */
 		$db = $this->conectaBD();
 		if($utf8 == true ){
     		$db->set_charset("utf8");
