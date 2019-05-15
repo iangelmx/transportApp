@@ -1,16 +1,15 @@
 <?php
 class API_tmx
 {
-	/* PRODUCCION: */
 	protected function conectaBD(){
 		$db_host= "localhost";
 		$db_user= "transportApp";
-		$db_password= "TmaPAeKnJbLguAKV";
-		$db_name= "pdstelmexProd";
+		$db_password= "root";
+		$db_name= "";
 		$db = mysqli_connect($db_host,$db_user,$db_password,$db_name);
 		return $db;
 	}
-	function llamada($peticion, $url='http://localhost/pdstelmex/api/rest.php', $headers = false, $disableSSLWarnings=false, $traceback=false, $jsonReq=false){ //http://psdtelmex.com.mx
+	function llamada($peticion, $url, $headers = false, $disableSSLWarnings=false, $traceback=false, $jsonReq=false){ //http://psdtelmex.com.mx
 	  $ch = curl_init($url);
 	  //print_r( http_build_query($peticionProject) );
 	  switch ($headers) {
