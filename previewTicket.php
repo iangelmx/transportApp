@@ -1,3 +1,44 @@
+<?php
+require('./librerias/api.php');
+
+$dropIn = $_POST['dropIn'];
+$dropOff = $_POST['dropOff'];
+$coordA = $_POST['coordsA'];
+$coordB = $_POST['coordsB'];
+$asientos = $_POST['numSeats'];
+$placaUnidad = $_POST['unidadSelected'];
+
+$url = "https://maps.googleapis.com/maps/api/distancematrix/json?key=AIzaSyC_tO0YLLkYTNrxBz1vdFvFf58g4CPYcGM&units=metric&origins=".$coordA."&destinations=".$coordB;
+
+$ch = curl_init( $url ); // such as http://example.com/example.xml
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HEADER, 0);
+$data = curl_exec($ch);
+curl_close($ch);
+
+$resultsDistance = json_decode( $data , true)['rows'][0]['elements'][0];
+
+$distanciaAB = $resultsDistance['distance']['value'];
+$tiempoAB = $resultsDistance['duration']['text'];
+
+
+$costo = 10;
+
+if( $distanciaAB > 4000 ){
+    $costo += int( ($distanciaAB-4000)*0.50 );
+}
+$costo*=intval($asientos);
+
+$api = new API_tmx();
+
+$unidadesDisponibles = $api->doQuery("SELECT
+    placa, distancia, (capacidad-ocupabilidad) as 'lugares', v.idUnidad, u.chofer
+    FROM unidades u INNER JOIN viaje v
+    ON u.idUnidad = v.idUnidad
+    WHERE u.capacidad > v.ocupabilidad
+    AND status = 'en_curso'
+    ORDER BY distancia ASC;")
+?>
 <!doctype html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang=""> <![endif]-->
@@ -5,6 +46,12 @@
 <!--[if gt IE 8]><!-->
 <html class="no-js" lang="">
 <!--<![endif]-->
+
+<!--
+
+    https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=19.435145,-99.166738&destinations=19.436748,-99.157939&key=AIzaSyC_tO0YLLkYTNrxBz1vdFvFf58g4CPYcGM
+
+    -->
 
 <head>
     <meta charset="utf-8">
@@ -25,9 +72,6 @@
     <link rel="stylesheet" href="assets/scss/style.css">
 
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,700,800' rel='stylesheet' type='text/css'>
-    <!-- <script src="./js/autocompleteAddres.js"></script> -->
-    <!-- &callback=initAutocomplete -->
-
     <!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/html5shiv/3.7.3/html5shiv.min.js"></script> -->
 
 </head>
@@ -113,46 +157,60 @@
                     <div class="col-md-12">
                         <div class="card">
                             <div class="card-header blue-bg white-text">
-                                <h4>Reservación de unidad</h4>
+                                <h4>Reservando lugares...</h4>
                             </div>
                             <div class="card-body">
-                                <form action="./unidadesDisponibles.php" method="post" enctype="multipart/form-data" class="form-horizontal">
+                                <form action="./previewTicket.php" method="post" enctype="multipart/form-data" class="form-horizontal">
 
-                                    <div class="row form-group">
-                                        <div class="col col-md-3">
-                                            <label for="text-input" class=" form-control-label">Seleccione punto de partida:</label>
+                                    <!------------------------------- -->
+
+
+                                    <section class="card">
+                                        <div class="card-header user-header alt bg-dark">
+                                            <div class="media">
+                                                <a href="#">
+                                                    <img class="align-self-center rounded-circle mr-3" style="width:85px; height:85px;" alt="" src="images/admin.jpg">
+                                                </a>
+                                                <div class="media-body">
+                                                    <h2 class="text-light display-6">Costo: $<?php echo $costo;?></h2>
+                                                    <p>Unidad: <?php echo $placaUnidad; ?></p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="col-12 col-md-9">
-                                            <input type="text" id="autocompleteDropIn" name="dropIn" placeholder="Ingresa dirección" class="form-control" onFocus="geolocate()">
-                                            <small class="form-text text-muted">Ingresa la dirección donde abordarás</small>
-                                        </div>
-                                    </div>
-                                    <div class="row form-group">
-                                        <div class="col col-md-3">
-                                            <label for="text-input" class=" form-control-label">Seleccione punto de descenso:</label>
-                                        </div>
-                                        <div class="col-12 col-md-9">
-                                            <input type="text" id="autocompleteDropOff" name="dropOff" placeholder="Ingresa dirección" class="form-control">
-                                            <small class="form-text text-muted">Ingresa la dirección del final de tu viaje</small>
-                                        </div>
-                                    </div>
-                                    <div class="row form-group">
-                                        <div class="col col-md-3">
-                                            <label for="text-input" class=" form-control-label">Número de asientos:</label>
-                                        </div>
-                                        <div class="col-12 col-md-9">
-                                            <input id="numSeats" name="numSeats" class="form-control" type="number" value="1" min="1" max="15" />
-                                            <small class="form-text text-muted">Usa las flechas para seleccionar el número de asientos que deseas</small>
-                                        </div>
-                                    </div>
-                                    <div class="row form-group">
+
+
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item">
+                                                <a href="#"> <i class="fa fa-envelope-o"></i> Lugares reservados <span class="badge badge-primary pull-right"> <?php echo $asientos; ?> </span></a>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <a href="#"> <i class="fa fa-tasks"></i> Tiempo estimado recorrido <span class="badge badge-warning pull-right"><?php echo $tiempoAB;?></span></a>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <a href="#"> <i class="fa fa-bell-o"></i> DropIn <p class="badge pull-right"> <?php echo $dropIn;?> </p></a>
+                                            </li>
+                                            <li class="list-group-item">
+                                                <a href="#"> <i class="fa fa-comments-o"></i> DropOff <p class="badge pull-right r-activity"><?php echo $dropOff;?> </p></a>
+                                            </li>
+                                        </ul>
+
+                                    </section>
+                                
+
+                                    <!---------------------------------- -->
+
+
+                                    <!-- <div class="row form-group">
                                         <div class="col-md-6">
-                                            <input type="submit" class="btn btn-block btn-success" value="Elegir unidad">
+                                            <input type="button" class="btn btn-block btn-success" value="Finalizar Compra">
                                         </div>
                                         <div class="col-md-6">
                                             <input type="button" class="btn btn-block btn-danger" value="Cancelar">
                                         </div>
-                                    </div>
+                                    </div> -->
+                                    <button type="button" class="btn btn-secondary">Cancelar</button>
+                                    <button type="button" class="btn btn-success"><i class="fa fa-cc-paypal"></i>&nbsp; Finalizar compra</button>
+
                                 </form>
                                 <!-- /# card -->
                             </div>
@@ -166,92 +224,12 @@
             </div>
             <!-- /#right-panel -->
 
-            <!-- <script>
-                
-    // This sample uses the Autocomplete widget to help the user select a
-    // place, then it retrieves the address components associated with that
-    // place, and then it populates the form fields with those details.
-    // This sample requires the Places library. Include the libraries=places
-    // parameter when you first load the API. For example:
-    // <script
-    // src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places">
-
-    var placeSearch, autocomplete;
-
-var componentForm = {
-street_number: 'short_name',
-route: 'long_name',
-locality: 'long_name',
-administrative_area_level_1: 'short_name',
-country: 'long_name',
-postal_code: 'short_name'
-};
-
-function initAutocomplete() {
-// Create the autocomplete object, restricting the search predictions to
-// geographical location types.
-autocomplete = new google.maps.places.Autocomplete(
-    document.getElementById('autocompleteDropIn'), {types: ['geocode']});
-
-// Avoid paying for data that you don't need by restricting the set of
-// place fields that are returned to just the address components.
-autocomplete.setFields(['address_component']);
-
-// When the user selects an address from the drop-down, populate the
-// address fields in the form.
-autocomplete.addListener('place_changed', fillInAddress);
-}
-
-function fillInAddress() {
-    // Get the place details from the autocomplete object.
-    var place = autocomplete.getPlace();
-
-    for (var component in componentForm) {
-        document.getElementById(component).value = '';
-        document.getElementById(component).disabled = false;
-    }
-
-    // Get each component of the address from the place details,
-    // and then fill-in the corresponding field on the form.
-    for (var i = 0; i < place.address_components.length; i++) {
-        var addressType = place.address_components[i].types[0];
-        if (componentForm[addressType]) {
-        var val = place.address_components[i][componentForm[addressType]];
-        document.getElementById(addressType).value = val;
-        }
-    }
-}
-
-// Bias the autocomplete object to the user's geographical location,
-// as supplied by the browser's 'navigator.geolocation' object.
-function geolocate() {
-    console.log( "On focus..." );
-if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function(position) {
-    var geolocation = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-    };
-    var circle = new google.maps.Circle(
-        {center: geolocation, radius: position.coords.accuracy});
-    autocomplete.setBounds(circle.getBounds());
-    });
-}
-}
-
-
-            </script> -->
-
-            <script src="./js/autocompleteAddres.js"></script>
-
-            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_tO0YLLkYTNrxBz1vdFvFf58g4CPYcGM&libraries=places&callback=initAutocomplete"></script>
-
             <!-- Right Panel -->
             <script src="assets/js/map.js"></script>
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"></script>
-            <!--<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCdFw-LWUKSGXxFG5eTsTy1pVFzminfsM&libraries=places&callback=initAutocomplete"
-                async defer></script>-->
+            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCdFw-LWUKSGXxFG5eTsTy1pVFzminfsM&libraries=places&callback=initAutocomplete"
+                async defer></script>
             <script src="assets/js/plugins.js"></script>
             <script src="assets/js/spiNum.js"></script>
             <script src="assets/js/main.js"></script>
@@ -263,9 +241,10 @@ if (navigator.geolocation) {
             <script src="assets/js/lib/vector-map/jquery.vmap.min.js"></script>
             <script src="assets/js/lib/vector-map/jquery.vmap.sampledata.js"></script>
             <script src="assets/js/lib/vector-map/country/jquery.vmap.world.js"></script>
-            <script>
-                function redirect(){
-                    window.location.href = "./unidadesDisponibles.php";
+
+            <script type="text/javascript">
+                function muestraDatos(element){
+                    console.log("Click a:"+ element.id );
                 }
             </script>
 

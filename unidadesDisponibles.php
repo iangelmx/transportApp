@@ -1,7 +1,31 @@
 <?php
 require('./librerias/api.php');
 
+$dropIn = $_POST['dropIn'];
+$dropOff = $_POST['dropOff'];
+$asientos = $_POST['numSeats'];
 
+$url = "https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=19.435145,-99.166738&destinations=19.436748,-99.157939&key=AIzaSyC_tO0YLLkYTNrxBz1vdFvFf58g4CPYcGM";
+
+$urlBase = "https://maps.google.com/maps/api/geocode/json?key=AIzaSyC_tO0YLLkYTNrxBz1vdFvFf58g4CPYcGM&address=";
+
+$ch = curl_init($urlBase.urlencode($dropIn)); // such as http://example.com/example.xml
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HEADER, 0);
+$data = curl_exec($ch);
+curl_close($ch);
+
+$coords = json_decode( $data , true)['results'][0]['geometry']['location'];
+$coordA = $coords['lat'].",".$coords['lng'];
+
+$ch = curl_init($urlBase.urlencode($dropOff)); // such as http://example.com/example.xml
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HEADER, 0);
+$data = curl_exec($ch);
+curl_close($ch);
+
+$coords = json_decode( $data , true)['results'][0]['geometry']['location'];
+$coordB = $coords['lat'].",".$coords['lng'];
 
 $api = new API_tmx();
 
@@ -20,6 +44,12 @@ $unidadesDisponibles = $api->doQuery("SELECT
 <!--[if gt IE 8]><!-->
 <html class="no-js" lang="">
 <!--<![endif]-->
+
+<!--
+
+    https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=19.435145,-99.166738&destinations=19.436748,-99.157939&key=AIzaSyC_tO0YLLkYTNrxBz1vdFvFf58g4CPYcGM
+
+    -->
 
 <head>
     <meta charset="utf-8">
@@ -40,7 +70,6 @@ $unidadesDisponibles = $api->doQuery("SELECT
     <link rel="stylesheet" href="assets/scss/style.css">
 
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,700,800' rel='stylesheet' type='text/css'>
-
     <!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/html5shiv/3.7.3/html5shiv.min.js"></script> -->
 
 </head>
@@ -129,14 +158,14 @@ $unidadesDisponibles = $api->doQuery("SELECT
                                 <h4>Selección de unidad</h4>
                             </div>
                             <div class="card-body">
-                                <form action="" method="post" enctype="multipart/form-data" class="form-horizontal">
+                                <form action="./previewTicket.php" method="post" enctype="multipart/form-data" class="form-horizontal" id="formUnidad">
 
                                     <!------------------------------- -->
                                 <?php
                                     foreach($unidadesDisponibles as $unidad) {
                                         echo ' 
                                         <a>
-                                        <section class="card" onclick="muestraDatos(this)" id=" '. $unidad['idUnidad'] .' ">
+                                        <section class="card" onclick="muestraDatos(this)" id=" '. $unidad['placa'] .' ">
                                             <div class="twt-feed blue-bg">
                                                 <div class="corner-ribon black-ribon">
                                                     <i class="fa fa-bus"></i>
@@ -175,8 +204,16 @@ $unidadesDisponibles = $api->doQuery("SELECT
                                                 
                                             </section></a>';
                                     }
+
+                                    echo "<input type=\"hidden\" value=\"$dropIn\" name = \"dropIn\"/>";
+                                    echo "<input type=\"hidden\" value=\"$dropOff\" name = \"dropOff\"/>";
+                                    echo "<input type=\"hidden\" value=\"$coordA\" name = \"coordsA\"/>";
+                                    echo "<input type=\"hidden\" value=\"$coordB\" name = \"coordsB\"/>";
                                 ?>
-                                    <!-- <div class="col-md-4"> -->
+                                
+                                
+                                <input type="hidden" value="" name = "unidadSelected" id = "unidadSelected"/>                                    <!-- <div class="col-md-4"> -->
+                                <input type="hidden" value="<?php echo $asientos;?>" name="numSeats"/>
                                         <!--
                                         <section class="card">
                                             <div class="twt-feed blue-bg">
@@ -263,6 +300,8 @@ $unidadesDisponibles = $api->doQuery("SELECT
             <script type="text/javascript">
                 function muestraDatos(element){
                     console.log("Click a:"+ element.id );
+                    jQuery("#unidadSelected").val(element.id);
+                    jQuery("#formUnidad").submit();
                 }
             </script>
 
