@@ -187,10 +187,10 @@ $unidadesDisponibles = $api->doQuery("SELECT
                                                 <a href="#"> <i class="fa fa-tasks"></i> Tiempo estimado recorrido <span class="badge badge-warning pull-right"><?php echo $tiempoAB;?></span></a>
                                             </li>
                                             <li class="list-group-item">
-                                                <a href="#"> <i class="fa fa-bell-o"></i> DropIn <p class="badge pull-right"> <?php echo $dropIn;?> </p></a>
+                                                <a href="#"> <i class="fa fa-bell-o"></i> DropIn <span class="badge pull-right"> <?php echo wordwrap($dropIn, 25, "<br />\n"); ?> </span></a>
                                             </li>
                                             <li class="list-group-item">
-                                                <a href="#"> <i class="fa fa-comments-o"></i> DropOff <p class="badge pull-right r-activity"><?php echo $dropOff;?> </p></a>
+                                                <a href="#"> <i class="fa fa-comments-o"></i> DropOff <span class="badge pull-right r-activity"><?php echo wordwrap($dropOff, 25, "<br />\n");?> </span></a>
                                             </li>
                                         </ul>
 

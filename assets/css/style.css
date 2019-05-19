@@ -184,6 +184,7 @@ aside.left-panel {
         .navbar .navbar-nav li > a .menu-title-text {
           font-size: 14px; }
         .navbar .navbar-nav li > a .badge {
+          word-wrap: break-word;
           border-radius: 0;
           font-family: 'Open Sans';
           font-weight: 600;
@@ -300,6 +301,7 @@ body.open .navbar .navbar-brand.hidden {
       .open aside.left-panel .navbar .navbar-nav li a .menu-title-text {
         font-size: 0; }
       .open aside.left-panel .navbar .navbar-nav li a .badge {
+        word-wrap: break-word;
         display: none; }
     .open aside.left-panel .navbar .navbar-nav li > a {
       max-width: 60px;

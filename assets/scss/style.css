@@ -637,6 +637,7 @@
     .horizontal-bars li.legend {
       text-align: center; }
       .horizontal-bars li.legend .badge {
+        word-wrap: break-word;
         display: inline-block;
         width: 8px;
         height: 8px;
@@ -913,6 +914,7 @@ aside.left-panel {
         .navbar .navbar-nav li > a .menu-title-text {
           font-size: 14px; }
         .navbar .navbar-nav li > a .badge {
+          word-wrap: break-word;
           border-radius: 0;
           font-family: 'Open Sans';
           font-weight: 600;
@@ -1029,6 +1031,7 @@ body.open .navbar .navbar-brand.hidden {
       .open aside.left-panel .navbar .navbar-nav li a .menu-title-text {
         font-size: 0; }
       .open aside.left-panel .navbar .navbar-nav li a .badge {
+        word-wrap: break-word;
         display: none; }
     .open aside.left-panel .navbar .navbar-nav li > a {
       max-width: 60px;
@@ -2070,6 +2073,7 @@ header .form-inline {
 
 /* Mixed Styles */
 .badges h1, .badges h2, .badges h3, .badges h4, .badges h5, .badges h6 {
+  word-wrap: break-word;
   margin: 5px 0; }
 
 .vue-lists ul, .vue-lists ol {
@@ -2116,6 +2120,7 @@ header .form-inline {
     padding: 15px; }
 
   .badges button {
+    word-wrap: break-word;
     margin: 2px 0; } }
 @media (max-width: 1024px) {
   aside.left-panel {
